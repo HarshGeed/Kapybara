@@ -32,6 +32,26 @@ export const postRouter = router({
     return await db.select().from(posts).orderBy(posts.createdAt);
   }),
 
+  // Get paginated posts
+  getPaginated: publicProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(6),
+      })
+    )
+    .query(async ({ input }) => {
+      const offset = (input.page - 1) * input.limit;
+      const allPosts = await db.select().from(posts).orderBy(posts.createdAt);
+      
+      return {
+        posts: allPosts.slice(offset, offset + input.limit),
+        totalPosts: allPosts.length,
+        totalPages: Math.ceil(allPosts.length / input.limit),
+        currentPage: input.page,
+      };
+    }),
+
   // Get single post
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
