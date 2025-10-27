@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
-import { posts } from "@/server/db/schema";
+import { posts, postCategories, categories } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 import slugify from "slugify";
 
@@ -13,6 +13,7 @@ export const postRouter = router({
         title: z.string().min(3),
         content: z.string().min(10),
         published: z.boolean().optional().default(false),
+        categoryIds: z.array(z.number()).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -23,6 +24,16 @@ export const postRouter = router({
         slug,
         published: input.published,
       }).returning();
+
+      // Add categories if provided
+      if (input.categoryIds && input.categoryIds.length > 0) {
+        await db.insert(postCategories).values(
+          input.categoryIds.map((categoryId) => ({
+            postId: newPost[0].id,
+            categoryId,
+          }))
+        );
+      }
 
       return newPost[0];
     }),
