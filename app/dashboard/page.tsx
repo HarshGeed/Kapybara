@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
+import PostForm from "@/components/PostForm";
+import CategoryForm from "@/components/CategoryForm";
 
 export default function DashboardPage() {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingPost, setEditingPost] = useState<{ id: number; title: string; content: string; published: boolean } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string | null } | null>(null);
 
   const utils = trpc.useUtils();
   const { data: posts, isLoading: postsLoading } = trpc.post.getAll.useQuery();
@@ -16,23 +19,16 @@ export default function DashboardPage() {
   const createPost = trpc.post.create.useMutation({
     onSuccess: () => {
       utils.post.getAll.invalidate();
-      setTitle("");
-      setContent("");
-      setPublished(false);
-      setPostCategoryIds([]);
       setShowPostForm(false);
+      setEditingPost(null);
     },
   });
 
   const updatePost = trpc.post.update.useMutation({
     onSuccess: () => {
       utils.post.getAll.invalidate();
-      setEditingPost(null);
-      setTitle("");
-      setContent("");
-      setPublished(false);
-      setPostCategoryIds([]);
       setShowPostForm(false);
+      setEditingPost(null);
     },
   });
 
@@ -45,9 +41,16 @@ export default function DashboardPage() {
   const createCategory = trpc.category.create.useMutation({
     onSuccess: () => {
       utils.category.getAll.invalidate();
-      setCategoryName("");
-      setCategoryDescription("");
       setShowCategoryForm(false);
+      setEditingCategory(null);
+    },
+  });
+
+  const updateCategory = trpc.category.update.useMutation({
+    onSuccess: () => {
+      utils.category.getAll.invalidate();
+      setShowCategoryForm(false);
+      setEditingCategory(null);
     },
   });
 
@@ -57,44 +60,41 @@ export default function DashboardPage() {
     },
   });
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [published, setPublished] = useState(false);
-  const [postCategoryIds, setPostCategoryIds] = useState<number[]>([]);
-
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryDescription, setCategoryDescription] = useState("");
-  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string | null } | null>(null);
-
-  const updateCategory = trpc.category.update.useMutation({
-    onSuccess: () => {
-      utils.category.getAll.invalidate();
-      setEditingCategory(null);
-      setCategoryName("");
-      setCategoryDescription("");
-      setShowCategoryForm(false);
-    },
-  });
-
   const handleEditPost = (post: { id: number; title: string; content: string; published: boolean }) => {
     setEditingPost(post);
-    setTitle(post.title);
-    setContent(post.content);
-    setPublished(post.published);
     setShowPostForm(true);
   };
 
-  const handleSavePost = () => {
+  const handleEditCategory = (category: { id: number; name: string; description: string | null }) => {
+    setEditingCategory(category);
+    setShowCategoryForm(true);
+  };
+
+  const handlePostSubmit = (data: { title: string; content: string; published: boolean; categoryIds: number[] }) => {
     if (editingPost) {
-      updatePost.mutate({ id: editingPost.id, title, content, published });
+      updatePost.mutate({ id: editingPost.id, title: data.title, content: data.content, published: data.published });
     } else {
-      createPost.mutate({ title, content, published, categoryIds: postCategoryIds });
+      createPost.mutate({ ...data });
+    }
+  };
+
+  const handleCategorySubmit = (data: { name: string; description: string }) => {
+    if (editingCategory) {
+      updateCategory.mutate({ id: editingCategory.id, name: data.name, description: data.description });
+    } else {
+      createCategory.mutate(data);
     }
   };
 
   const handleDeletePost = (id: number) => {
     if (confirm("Are you sure you want to delete this post?")) {
       deletePost.mutate({ id });
+    }
+  };
+
+  const handleDeleteCategory = (id: number, name: string) => {
+    if (confirm(`Delete category "${name}"?`)) {
+      deleteCategory.mutate({ id });
     }
   };
 
@@ -113,13 +113,8 @@ export default function DashboardPage() {
         <div className="flex gap-4 mb-8">
           <button
             onClick={() => {
-              setShowPostForm(!showPostForm);
-              setShowCategoryForm(false);
               setEditingPost(null);
-              setTitle("");
-              setContent("");
-              setPublished(false);
-              setPostCategoryIds([]);
+              setShowPostForm(true);
             }}
             className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition"
           >
@@ -127,11 +122,8 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => {
-              setShowCategoryForm(!showCategoryForm);
-              setShowPostForm(false);
               setEditingCategory(null);
-              setCategoryName("");
-              setCategoryDescription("");
+              setShowCategoryForm(true);
             }}
             className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition"
           >
@@ -139,140 +131,30 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Create/Edit Post Form */}
-        {showPostForm && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingPost ? "Edit Post" : "Create New Post"}
-            </h2>
-            <div className="space-y-4">
-        <input
-                type="text"
-          placeholder="Enter title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+        {/* Post Form Modal */}
+        <PostForm
+          isOpen={showPostForm}
+          onClose={() => {
+            setShowPostForm(false);
+            setEditingPost(null);
+          }}
+          onSubmit={handlePostSubmit}
+          initialData={editingPost || undefined}
+          categories={categories || []}
+          isLoading={createPost.isPending || updatePost.isPending}
         />
-        <textarea
-                placeholder="Write your content..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="published"
-                  checked={published}
-                  onChange={(e) => setPublished(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="published" className="text-gray-700">
-                  Published
-                </label>
-              </div>
-              {categories && categories.length > 0 && (
-                <div>
-                  <label className="block text-gray-700 mb-2">Categories</label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => (
-                      <label key={category.id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={postCategoryIds.includes(category.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setPostCategoryIds([...postCategoryIds, category.id]);
-                            } else {
-                              setPostCategoryIds(postCategoryIds.filter((id) => id !== category.id));
-                            }
-                          }}
-                        />
-                        <span className="text-sm">{category.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSavePost}
-                  disabled={!title.trim() || !content.trim() || createPost.isPending || updatePost.isPending}
-                  className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  {createPost.isPending || updatePost.isPending ? "Saving..." : "Save Post"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPostForm(false);
-                    setEditingPost(null);
-                    setTitle("");
-                    setContent("");
-                    setPublished(false);
-                    setPostCategoryIds([]);
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Create/Edit Category Form */}
-        {showCategoryForm && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingCategory ? "Edit Category" : "Create New Category"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Enter category name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <textarea
-                placeholder="Enter category description (optional)"
-                value={categoryDescription}
-                onChange={(e) => setCategoryDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg h-24 resize-none focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    if (editingCategory) {
-                      updateCategory.mutate({
-                        id: editingCategory.id,
-                        name: categoryName,
-                        description: categoryDescription,
-                      });
-                    } else {
-                      createCategory.mutate({ name: categoryName, description: categoryDescription });
-                    }
-                  }}
-                  disabled={!categoryName.trim() || createCategory.isPending || updateCategory.isPending}
-                  className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  {createCategory.isPending || updateCategory.isPending ? "Saving..." : editingCategory ? "Update Category" : "Create Category"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCategoryForm(false);
-                    setEditingCategory(null);
-                    setCategoryName("");
-                    setCategoryDescription("");
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Category Form Modal */}
+        <CategoryForm
+          isOpen={showCategoryForm}
+          onClose={() => {
+            setShowCategoryForm(false);
+            setEditingCategory(null);
+          }}
+          onSubmit={handleCategorySubmit}
+          initialData={editingCategory || undefined}
+          isLoading={createCategory.isPending || updateCategory.isPending}
+        />
 
         {/* Posts Section */}
         <div className="bg-white rounded-lg border border-gray-200 mb-8">
@@ -311,14 +193,14 @@ export default function DashboardPage() {
                         >
                           Edit
                         </button>
-        <button
+                        <button
                           onClick={() => handleDeletePost(post.id)}
                           className="px-3 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50 transition text-sm"
                         >
                           Delete
-        </button>
-      </div>
-    </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -350,22 +232,13 @@ export default function DashboardPage() {
                       <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => {
-                            setEditingCategory(category);
-                            setCategoryName(category.name);
-                            setCategoryDescription(category.description || "");
-                            setShowCategoryForm(true);
-                          }}
+                          onClick={() => handleEditCategory(category)}
                           className="text-blue-600 hover:text-blue-800 text-sm"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm(`Delete category "${category.name}"?`)) {
-                              deleteCategory.mutate({ id: category.id });
-                            }
-                          }}
+                          onClick={() => handleDeleteCategory(category.id, category.name)}
                           className="text-red-600 hover:text-red-800 text-sm"
                         >
                           Delete
