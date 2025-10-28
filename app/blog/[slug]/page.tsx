@@ -3,6 +3,9 @@
 import { trpc } from "@/utils/trpc";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 function CategoryTags({ slug }: { slug: string }) {
   const { data: postCategories } = trpc.post.getCategoriesBySlug.useQuery({ slug });
@@ -93,9 +96,9 @@ export default function SinglePostPage() {
         <CategoryTags slug={slug} />
 
         <div className="prose prose-lg max-w-none">
-          <div className="text-lg leading-relaxed whitespace-pre-line text-gray-700">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
             {data.content}
-          </div>
+          </ReactMarkdown>
         </div>
       </div>
     </article>

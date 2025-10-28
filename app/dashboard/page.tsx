@@ -5,6 +5,9 @@ import { trpc } from "@/utils/trpc";
 import Link from "next/link";
 import PostForm from "@/components/PostForm";
 import CategoryForm from "@/components/CategoryForm";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 function CategoryTags({ postId }: { postId: number }) {
   const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
@@ -193,9 +196,11 @@ export default function DashboardPage() {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
-                        <p className="text-gray-600 text-sm mt-1">
-                          {post.content.substring(0, 100)}...
-                        </p>
+                        <div className="text-gray-600 text-sm mt-1 prose max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            {post.content.length > 100 ? post.content.substring(0, 100) + "..." : post.content}
+                          </ReactMarkdown>
+                        </div>
                         <div className="flex gap-4 mt-2 text-sm text-gray-500">
                           <span>{post.published ? "Published" : "Draft"}</span>
                           <span>•</span>

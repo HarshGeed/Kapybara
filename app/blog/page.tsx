@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 function CategoryTags({ postId }: { postId: number }) {
   const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
@@ -137,9 +140,11 @@ export default function BlogListPage() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                       {post.title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-2 text-sm mb-3">
-                      {post.content}
-                    </p>
+                    <div className="text-gray-600 line-clamp-2 text-sm mb-3 prose max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {post.content}
+                      </ReactMarkdown>
+                    </div>
                     <div className="flex gap-2 flex-wrap">
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                         {post.published ? "Published" : "Draft"}

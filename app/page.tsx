@@ -4,6 +4,9 @@ import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
 import PostForm from "@/components/PostForm";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 function CategoryTags({ postId }: { postId: number }) {
   const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
@@ -24,6 +27,7 @@ function CategoryTags({ postId }: { postId: number }) {
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const postsPerPage = 6;
 
   const utils = trpc.useUtils();
@@ -42,6 +46,10 @@ export default function HomePage() {
       utils.post.getAll.invalidate();
       utils.post.getAllPublished.invalidate();
       setShowForm(false);
+      setFormError(null);
+    },
+    onError: (error) => {
+      setFormError(error.message || "Failed to create post. Please try again.");
     },
   });
 
@@ -62,6 +70,7 @@ export default function HomePage() {
   };
 
   const handlePostSubmit = (data: { title: string; content: string; published: boolean; categoryIds: number[] }) => {
+    setFormError(null);
     createPost.mutate(data);
   };
 
@@ -85,11 +94,19 @@ export default function HomePage() {
         {/* Post Form Modal */}
         <PostForm
           isOpen={showForm}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setFormError(null); }}
           onSubmit={handlePostSubmit}
           categories={categories || []}
           isLoading={createPost.isPending}
         />
+        {showForm && formError && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-10" />
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-red-100 text-red-700 px-6 py-3 rounded shadow-lg border border-red-300">
+              {formError}
+            </div>
+          </div>
+        )}
 
         {/* Recent Blog Posts Section */}
         {recentPosts.length > 0 && (
@@ -109,9 +126,11 @@ export default function HomePage() {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                       {recentPosts[0].title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-3 mb-3">
-                      {recentPosts[0].content}
-                    </p>
+                    <div className="text-gray-600 line-clamp-3 mb-3 prose max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {recentPosts[0].content}
+                      </ReactMarkdown>
+                    </div>
                     <CategoryTags postId={recentPosts[0].id} />
                   </div>
                 </div>
@@ -132,9 +151,11 @@ export default function HomePage() {
                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                           {post.title}
                         </h3>
-                        <p className="text-gray-600 line-clamp-2 text-sm mb-2">
-                          {post.content}
-                        </p>
+                        <div className="text-gray-600 line-clamp-2 text-sm mb-2 prose max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            {post.content}
+                          </ReactMarkdown>
+                        </div>
                         <CategoryTags postId={post.id} />
                       </div>
                     </div>
@@ -165,9 +186,11 @@ export default function HomePage() {
                       <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                         {post.title}
                       </h3>
-                      <p className="text-gray-600 line-clamp-2 text-sm mb-3">
-                        {post.content}
-                      </p>
+                      <div className="text-gray-600 line-clamp-2 text-sm mb-3 prose max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                          {post.content}
+                        </ReactMarkdown>
+                      </div>
                       <CategoryTags postId={post.id} />
                     </div>
                   </div>
