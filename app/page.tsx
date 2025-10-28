@@ -76,7 +76,7 @@ export default function HomePage() {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
           >
             + New blog post
           </button>
@@ -186,7 +186,7 @@ export default function HomePage() {
             <button
               onClick={handlePrev}
               disabled={currentPage === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition cursor-pointer"
             >
               Previous
             </button>
@@ -225,7 +225,7 @@ export default function HomePage() {
             <button
               onClick={handleNext}
               disabled={currentPage === paginatedData.totalPages}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition cursor-pointer"
             >
               Next
             </button>

@@ -85,7 +85,7 @@ export default function BlogListPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleCategoryChange(null)}
-                className={`px-4 py-2 rounded-full transition ${
+                className={`px-4 py-2 rounded-full transition cursor-pointer ${
                   selectedCategory === null
                     ? "bg-black text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -97,7 +97,7 @@ export default function BlogListPage() {
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
-                  className={`px-4 py-2 rounded-full transition ${
+                  className={`px-4 py-2 rounded-full transition cursor-pointer ${
                     selectedCategory === category.id
                       ? "bg-black text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -165,7 +165,7 @@ export default function BlogListPage() {
             <button
               onClick={handlePrev}
               disabled={currentPage === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition cursor-pointer"
             >
               Previous
             </button>
@@ -202,7 +202,7 @@ export default function BlogListPage() {
             <button
               onClick={handleNext}
               disabled={currentPage === paginatedData.totalPages}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition cursor-pointer"
             >
               Next
             </button>

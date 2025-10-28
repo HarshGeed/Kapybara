@@ -132,7 +132,7 @@ export default function DashboardPage() {
               setEditingPost(null);
               setShowPostForm(true);
             }}
-            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
           >
             + New Post
           </button>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
               setEditingCategory(null);
               setShowCategoryForm(true);
             }}
-            className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition"
+            className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition cursor-pointer"
           >
             + New Category
           </button>
@@ -206,13 +206,13 @@ export default function DashboardPage() {
                       <div className="flex gap-2 ml-4">
                         <button
                           onClick={() => handleEditPost(post)}
-                          className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 transition text-sm"
+                          className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 transition text-sm cursor-pointer"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeletePost(post.id)}
-                          className="px-3 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50 transition text-sm"
+                          className="px-3 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50 transition text-sm cursor-pointer"
                         >
                           Delete
                         </button>
@@ -250,13 +250,13 @@ export default function DashboardPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditCategory(category)}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteCategory(category.id, category.name)}
-                          className="text-red-600 hover:text-red-800 text-sm"
+                          className="text-red-600 hover:text-red-800 text-sm cursor-pointer"
                         >
                           Delete
                         </button>
