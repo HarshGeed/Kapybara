@@ -4,7 +4,7 @@ Clean, minimal blog platform with posts, categories, filtering, and a simple das
 
 ### Live Deployment
 
-- URL: add your deployed URL here (e.g., `https://kapybara.vercel.app`)
+- URL: https://kapybara.vercel.app/
 
 ### Tech Stack
 
@@ -36,7 +36,10 @@ Clean, minimal blog platform with posts, categories, filtering, and a simple das
   - [x] Draft vs Published status
   - [x] Loading and error states
   - [x] Mobile-responsive design
-  - [ ] Content editor with markdown or rich text (currently plain textarea)
+  - [x] Content editor with markdown or rich text
+ 
+- **Priority 3 (Bonus Features)**
+  - [x] Pagination
 
 ---
 
@@ -186,19 +189,9 @@ npm run db:studio
 
 ## Trade-offs & Decisions
 
-- Simplicity over bells and whistles: forms use a textarea (no markdown/rich text) to keep UI lean and focus on CRUD flows.
+- Simplicity over bells and whistles: forms use React-Markdown library for simple markdown to keep UI lean and focus on CRUD flows.
 - Serverless Postgres (Neon) for frictionless DX; Drizzle for type-safe queries and clear schema.
 - Public tRPC procedures only; no auth layer included to keep scope minimal. Add middleware in `server/trpc/trpc.ts` when needed.
 - Slugs regenerate on title/name updates, which can change URLs. In production you might want slug immutability or redirects.
 
----
 
-## Time Spent
-
-- Fill in your actual time here (optional).
-
----
-
-## License
-
-MIT
