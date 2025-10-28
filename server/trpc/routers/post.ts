@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
-import { posts, postCategories, categories } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
+import { posts, postCategories } from "@/server/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import slugify from "slugify";
 
 export const postRouter = router({
@@ -49,11 +49,41 @@ export const postRouter = router({
       z.object({
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(6),
+        categoryId: z.number().optional(),
       })
     )
     .query(async ({ input }) => {
       const offset = (input.page - 1) * input.limit;
-      const allPosts = await db.select().from(posts).orderBy(posts.createdAt);
+      
+      let allPosts;
+      
+      if (input.categoryId) {
+        // Filter posts by category using the join table
+        const categoryPosts = await db
+          .select({ postId: postCategories.postId })
+          .from(postCategories)
+          .where(eq(postCategories.categoryId, input.categoryId));
+        
+        const postIds = categoryPosts.map((cp) => cp.postId);
+        
+        if (postIds.length === 0) {
+          return {
+            posts: [],
+            totalPosts: 0,
+            totalPages: 0,
+            currentPage: input.page,
+          };
+        }
+        
+        // Get posts with those IDs using inArray
+        allPosts = await db
+          .select()
+          .from(posts)
+          .where(inArray(posts.id, postIds))
+          .orderBy(posts.createdAt);
+      } else {
+        allPosts = await db.select().from(posts).orderBy(posts.createdAt);
+      }
       
       return {
         posts: allPosts.slice(offset, offset + input.limit),

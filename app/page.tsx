@@ -126,10 +126,10 @@ export default function HomePage() {
                     <p className="text-gray-600 line-clamp-3">
                       {recentPosts[0].content}
                     </p>
-                    <div className="mt-4 flex gap-2">
+                    {/* <div className="mt-4 flex gap-2">
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Design</span>
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Research</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </Link>
@@ -152,10 +152,10 @@ export default function HomePage() {
                         <p className="text-gray-600 line-clamp-2 text-sm">
                           {post.content}
                         </p>
-                        <div className="mt-3 flex gap-2">
+                        {/* <div className="mt-3 flex gap-2">
                           <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Design</span>
                           <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Research</span>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </Link>
@@ -188,10 +188,10 @@ export default function HomePage() {
                       <p className="text-gray-600 line-clamp-2 text-sm mb-3">
                         {post.content}
                       </p>
-                      <div className="flex gap-2 flex-wrap">
+                      {/* <div className="flex gap-2 flex-wrap">
                         <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Product</span>
                         <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Research</span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </Link>

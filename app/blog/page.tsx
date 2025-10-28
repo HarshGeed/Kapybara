@@ -12,11 +12,10 @@ export default function BlogListPage() {
   const { data: paginatedData, isLoading, error } = trpc.post.getPaginated.useQuery({
     page: currentPage,
     limit: postsPerPage,
+    categoryId: selectedCategory || undefined,
   });
 
   const { data: categories } = trpc.category.getAll.useQuery();
-  // Filter posts by category if one is selected
-  const filteredPosts = paginatedData?.posts || [];
 
   const handleNext = () => {
     if (paginatedData && currentPage < paginatedData.totalPages) {
@@ -32,6 +31,11 @@ export default function BlogListPage() {
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleCategoryChange = (categoryId: number | null) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1); // Reset to page 1 when category changes
   };
 
   if (error) {
@@ -64,7 +68,7 @@ export default function BlogListPage() {
           <div className="mb-8">
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => handleCategoryChange(null)}
                 className={`px-4 py-2 rounded-full transition ${
                   selectedCategory === null
                     ? "bg-black text-white"
@@ -76,7 +80,7 @@ export default function BlogListPage() {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategoryChange(category.id)}
                   className={`px-4 py-2 rounded-full transition ${
                     selectedCategory === category.id
                       ? "bg-black text-white"
@@ -98,9 +102,9 @@ export default function BlogListPage() {
               <p className="text-gray-600">Loading posts...</p>
             </div>
           </div>
-        ) : filteredPosts.length > 0 ? (
+        ) : (paginatedData?.posts || []).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {filteredPosts.map((post) => (
+            {(paginatedData?.posts || []).map((post) => (
               <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                 <div className="h-full border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition">
                   <div className="h-48 bg-gradient-to-br from-indigo-400 to-purple-300 flex items-center justify-center">
@@ -139,7 +143,7 @@ export default function BlogListPage() {
         )}
 
         {/* Pagination */}
-        {paginatedData && paginatedData.totalPages > 1 && !selectedCategory && (
+        {paginatedData && paginatedData.totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 py-8 border-t border-gray-200">
             <button
               onClick={handlePrev}

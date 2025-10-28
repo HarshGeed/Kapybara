@@ -22,6 +22,31 @@ export const categoryRouter = router({
     return await db.select().from(categories);
   }),
 
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().min(2).optional(),
+        description: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const updateData: { name?: string; slug?: string; description?: string } = {};
+      if (input.name !== undefined) {
+        updateData.name = input.name;
+        updateData.slug = slugify(input.name, { lower: true });
+      }
+      if (input.description !== undefined) {
+        updateData.description = input.description;
+      }
+      const updatedCategory = await db
+        .update(categories)
+        .set(updateData)
+        .where(eq(categories.id, input.id))
+        .returning();
+      return updatedCategory[0];
+    }),
+
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
