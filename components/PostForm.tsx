@@ -23,19 +23,19 @@ export default function PostForm({ isOpen, onClose, onSubmit, initialData, categ
   const [published, setPublished] = useState(false);
   const [categoryIds, setCategoryIds] = useState<number[]>([]);
 
-  // Update form when modal opens with data
+  // Reset form when modal opens/closes
   useEffect(() => {
-    if (!isOpen) return;
-    
-    if (initialData) {
-      setTitle(initialData.title);
-      setContent(initialData.content);
-      setPublished(initialData.published);
-      setCategoryIds([]);
-    } else {
+    if (isOpen && !initialData) {
+      // Reset for new post
       setTitle("");
       setContent("");
       setPublished(false);
+      setCategoryIds([]);
+    } else if (isOpen && initialData) {
+      // Load data for editing
+      setTitle(initialData.title);
+      setContent(initialData.content);
+      setPublished(initialData.published);
       setCategoryIds([]);
     }
   }, [isOpen, initialData]);
