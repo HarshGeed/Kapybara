@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Category {
   id: number;
@@ -18,25 +18,28 @@ interface PostFormProps {
 }
 
 export default function PostForm({ isOpen, onClose, onSubmit, initialData, categories, isLoading }: PostFormProps) {
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [content, setContent] = useState(initialData?.content || "");
-  const [published, setPublished] = useState(initialData?.published || false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [published, setPublished] = useState(false);
   const [categoryIds, setCategoryIds] = useState<number[]>([]);
 
-  // Update state when initialData changes
-  if (initialData) {
-    if (title !== initialData.title) setTitle(initialData.title);
-    if (content !== initialData.content) setContent(initialData.content);
-    if (published !== initialData.published) setPublished(initialData.published);
-  }
-
-  // Reset when modal closes
-  if (!isOpen && title !== "" && !initialData) {
-    setTitle("");
-    setContent("");
-    setPublished(false);
-    setCategoryIds([]);
-  }
+  // Update form when modal opens with data
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    if (initialData) {
+      setTitle(initialData.title);
+      setContent(initialData.content);
+      setPublished(initialData.published);
+      setCategoryIds([]);
+    } else {
+      setTitle("");
+      setContent("");
+      setPublished(false);
+      setCategoryIds([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

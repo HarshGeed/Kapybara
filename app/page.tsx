@@ -15,13 +15,14 @@ export default function HomePage() {
     limit: postsPerPage,
   });
 
-  const { data: allPosts } = trpc.post.getAll.useQuery();
+  const { data: allPosts } = trpc.post.getAllPublished.useQuery();
   const recentPosts = allPosts?.slice(0, 3) || [];
 
   const { mutate, isPending: isPosting } = trpc.post.create.useMutation({
     onSuccess: () => {
       utils.post.getPaginated.invalidate();
       utils.post.getAll.invalidate();
+      utils.post.getAllPublished.invalidate();
       setTitle("");
       setContent("");
       setShowForm(false);

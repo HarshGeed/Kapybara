@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
 import { posts, postCategories, categories } from "@/server/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and } from "drizzle-orm";
 import slugify from "slugify";
 
 export const postRouter = router({
@@ -38,12 +38,21 @@ export const postRouter = router({
       return newPost[0];
     }),
 
-  // Get all posts
+  // Get all posts (for dashboard - shows all posts)
   getAll: publicProcedure.query(async () => {
     return await db.select().from(posts).orderBy(posts.createdAt);
   }),
 
-  // Get paginated posts
+  // Get all published posts
+  getAllPublished: publicProcedure.query(async () => {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.published, true))
+      .orderBy(posts.createdAt);
+  }),
+
+  // Get paginated posts (for public pages - shows only published)
   getPaginated: publicProcedure
     .input(
       z.object({
@@ -75,14 +84,19 @@ export const postRouter = router({
           };
         }
         
-        // Get posts with those IDs using inArray
+        // Get only published posts with those IDs using inArray and published filter
         allPosts = await db
           .select()
           .from(posts)
-          .where(inArray(posts.id, postIds))
+          .where(and(inArray(posts.id, postIds), eq(posts.published, true)))
           .orderBy(posts.createdAt);
       } else {
-        allPosts = await db.select().from(posts).orderBy(posts.createdAt);
+        // Get only published posts
+        allPosts = await db
+          .select()
+          .from(posts)
+          .where(eq(posts.published, true))
+          .orderBy(posts.createdAt);
       }
       
       return {
@@ -93,11 +107,14 @@ export const postRouter = router({
       };
     }),
 
-  // Get single post
+  // Get single post by slug (only published posts for public)
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
-      const result = await db.select().from(posts).where(eq(posts.slug, input.slug));
+      const result = await db
+        .select()
+        .from(posts)
+        .where(and(eq(posts.slug, input.slug), eq(posts.published, true)));
       if (!result.length) throw new Error("Post not found");
       return result[0];
     }),
