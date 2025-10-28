@@ -4,6 +4,22 @@ import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
 
+function CategoryTags({ postId }: { postId: number }) {
+  const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
+  
+  if (!postCategories || postCategories.length === 0) return null;
+  
+  return (
+    <div className="flex gap-2 flex-wrap mt-2">
+      {postCategories.map((cat) => (
+        <span key={cat.id} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+          {cat.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function BlogListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -129,6 +145,7 @@ export default function BlogListPage() {
                         {post.published ? "Published" : "Draft"}
                       </span>
                     </div>
+                    <CategoryTags postId={post.id} />
                   </div>
                 </div>
               </Link>

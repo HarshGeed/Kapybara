@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
-import { posts, postCategories } from "@/server/db/schema";
+import { posts, postCategories, categories } from "@/server/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import slugify from "slugify";
 
@@ -132,5 +132,51 @@ export const postRouter = router({
     .mutation(async ({ input }) => {
       await db.delete(posts).where(eq(posts.id, input.id));
       return { success: true };
+    }),
+
+  // Get categories for a post
+  getCategoriesByPostId: publicProcedure
+    .input(z.object({ postId: z.number() }))
+    .query(async ({ input }) => {
+      const postCategoryIds = await db
+        .select({ categoryId: postCategories.categoryId })
+        .from(postCategories)
+        .where(eq(postCategories.postId, input.postId));
+
+      if (postCategoryIds.length === 0) {
+        return [];
+      }
+
+      const categoryIds = postCategoryIds.map((pc) => pc.categoryId);
+      return await db
+        .select()
+        .from(categories)
+        .where(inArray(categories.id, categoryIds));
+    }),
+
+  // Get categories by slug
+  getCategoriesBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const post = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, input.slug)).limit(1);
+      
+      if (post.length === 0) {
+        return [];
+      }
+
+      const postCategoryIds = await db
+        .select({ categoryId: postCategories.categoryId })
+        .from(postCategories)
+        .where(eq(postCategories.postId, post[0].id));
+
+      if (postCategoryIds.length === 0) {
+        return [];
+      }
+
+      const categoryIds = postCategoryIds.map((pc) => pc.categoryId);
+      return await db
+        .select()
+        .from(categories)
+        .where(inArray(categories.id, categoryIds));
     }),
 });

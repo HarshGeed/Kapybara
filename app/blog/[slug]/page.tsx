@@ -4,8 +4,25 @@ import { trpc } from "@/utils/trpc";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+function CategoryTags({ slug }: { slug: string }) {
+  const { data: postCategories } = trpc.post.getCategoriesBySlug.useQuery({ slug });
+  
+  if (!postCategories || postCategories.length === 0) return null;
+  
+  return (
+    <div className="flex gap-2 flex-wrap mb-6">
+      {postCategories.map((cat) => (
+        <span key={cat.id} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+          {cat.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function SinglePostPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string }>();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const { data, isLoading, error } = trpc.post.getBySlug.useQuery({ slug });
 
   if (isLoading) {
@@ -72,6 +89,8 @@ export default function SinglePostPage() {
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
           {data.title}
         </h1>
+
+        <CategoryTags slug={slug} />
 
         <div className="prose prose-lg max-w-none">
           <div className="text-lg leading-relaxed whitespace-pre-line text-gray-700">

@@ -64,6 +64,17 @@ export default function DashboardPage() {
 
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string | null } | null>(null);
+
+  const updateCategory = trpc.category.update.useMutation({
+    onSuccess: () => {
+      utils.category.getAll.invalidate();
+      setEditingCategory(null);
+      setCategoryName("");
+      setCategoryDescription("");
+      setShowCategoryForm(false);
+    },
+  });
 
   const handleEditPost = (post: { id: number; title: string; content: string; published: boolean }) => {
     setEditingPost(post);
@@ -118,6 +129,9 @@ export default function DashboardPage() {
             onClick={() => {
               setShowCategoryForm(!showCategoryForm);
               setShowPostForm(false);
+              setEditingCategory(null);
+              setCategoryName("");
+              setCategoryDescription("");
             }}
             className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition"
           >
@@ -206,10 +220,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Create Category Form */}
+        {/* Create/Edit Category Form */}
         {showCategoryForm && (
           <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Create New Category</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {editingCategory ? "Edit Category" : "Create New Category"}
+            </h2>
             <div className="space-y-4">
               <input
                 type="text"
@@ -227,16 +243,25 @@ export default function DashboardPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    createCategory.mutate({ name: categoryName, description: categoryDescription });
+                    if (editingCategory) {
+                      updateCategory.mutate({
+                        id: editingCategory.id,
+                        name: categoryName,
+                        description: categoryDescription,
+                      });
+                    } else {
+                      createCategory.mutate({ name: categoryName, description: categoryDescription });
+                    }
                   }}
-                  disabled={!categoryName.trim() || createCategory.isPending}
+                  disabled={!categoryName.trim() || createCategory.isPending || updateCategory.isPending}
                   className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
                 >
-                  {createCategory.isPending ? "Creating..." : "Create Category"}
+                  {createCategory.isPending || updateCategory.isPending ? "Saving..." : editingCategory ? "Update Category" : "Create Category"}
                 </button>
                 <button
                   onClick={() => {
                     setShowCategoryForm(false);
+                    setEditingCategory(null);
                     setCategoryName("");
                     setCategoryDescription("");
                   }}
@@ -323,16 +348,29 @@ export default function DashboardPage() {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Delete category "${category.name}"?`)) {
-                            deleteCategory.mutate({ id: category.id });
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingCategory(category);
+                            setCategoryName(category.name);
+                            setCategoryDescription(category.description || "");
+                            setShowCategoryForm(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete category "${category.name}"?`)) {
+                              deleteCategory.mutate({ id: category.id });
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                     {category.description && (
                       <p className="text-gray-600 text-sm">{category.description}</p>
