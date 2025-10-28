@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic"; // 👈 Needed for SSR-safe import
 
 // 👇 Dynamically import Markdown editor (prevents SSR issues)
@@ -19,6 +19,7 @@ interface PostFormProps {
   initialData?: { id: number; title: string; content: string; published: boolean };
   categories: Category[];
   isLoading?: boolean;
+  initialCategoryIds?: number[];
 }
 
 export default function PostForm({
@@ -28,25 +29,12 @@ export default function PostForm({
   initialData,
   categories,
   isLoading,
+  initialCategoryIds = [],
 }: PostFormProps) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [published, setPublished] = useState(false);
-  const [categoryIds, setCategoryIds] = useState<number[]>([]);
-
-  useEffect(() => {
-    if (isOpen && !initialData) {
-      setTitle("");
-      setContent("");
-      setPublished(false);
-      setCategoryIds([]);
-    } else if (isOpen && initialData) {
-      setTitle(initialData.title);
-      setContent(initialData.content);
-      setPublished(initialData.published);
-      setCategoryIds([]);
-    }
-  }, [isOpen, initialData]);
+  const [title, setTitle] = useState(initialData ? initialData.title : "");
+  const [content, setContent] = useState(initialData ? initialData.content : "");
+  const [published, setPublished] = useState(initialData ? initialData.published : false);
+  const [categoryIds, setCategoryIds] = useState<number[]>(initialCategoryIds);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

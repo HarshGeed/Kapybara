@@ -127,6 +127,7 @@ export const postRouter = router({
         title: z.string(),
         content: z.string(),
         published: z.boolean(),
+        categoryIds: z.array(z.number()).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -140,6 +141,19 @@ export const postRouter = router({
           slug,
         })
         .where(eq(posts.id, input.id));
+
+      // Replace post categories if provided
+      if (input.categoryIds) {
+        // Remove existing mappings
+        await db.delete(postCategories).where(eq(postCategories.postId, input.id));
+        if (input.categoryIds.length > 0) {
+          // Insert new mappings (ensure uniqueness client-side not guaranteed)
+          const uniqueCategoryIds = Array.from(new Set(input.categoryIds));
+          await db.insert(postCategories).values(
+            uniqueCategoryIds.map((categoryId) => ({ postId: input.id, categoryId }))
+          );
+        }
+      }
       return { success: true };
     }),
 

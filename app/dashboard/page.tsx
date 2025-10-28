@@ -34,6 +34,10 @@ export default function DashboardPage() {
   const utils = trpc.useUtils();
   const { data: posts, isLoading: postsLoading } = trpc.post.getAll.useQuery();
   const { data: categories, isLoading: categoriesLoading } = trpc.category.getAll.useQuery();
+  const { data: editingPostCategories } = trpc.post.getCategoriesByPostId.useQuery(
+    { postId: editingPost?.id as number },
+    { enabled: Boolean(editingPost?.id) }
+  );
 
   const createPost = trpc.post.create.useMutation({
     onSuccess: () => {
@@ -91,7 +95,7 @@ export default function DashboardPage() {
 
   const handlePostSubmit = (data: { title: string; content: string; published: boolean; categoryIds: number[] }) => {
     if (editingPost) {
-      updatePost.mutate({ id: editingPost.id, title: data.title, content: data.content, published: data.published });
+      updatePost.mutate({ id: editingPost.id, title: data.title, content: data.content, published: data.published, categoryIds: data.categoryIds });
     } else {
       createPost.mutate({ ...data });
     }
@@ -152,6 +156,7 @@ export default function DashboardPage() {
 
         {/* Post Form Modal */}
         <PostForm
+          key={editingPost?.id ?? "new"}
           isOpen={showPostForm}
           onClose={() => {
             setShowPostForm(false);
@@ -160,6 +165,7 @@ export default function DashboardPage() {
           onSubmit={handlePostSubmit}
           initialData={editingPost || undefined}
           categories={categories || []}
+          initialCategoryIds={(editingPostCategories || []).map((c) => c.id)}
           isLoading={createPost.isPending || updatePost.isPending}
         />
 
