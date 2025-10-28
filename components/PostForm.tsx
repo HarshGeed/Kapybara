@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic"; // 👈 Needed for SSR-safe import
+import dynamic from "next/dynamic"; // Needed for SSR-safe import
 
-// 👇 Dynamically import Markdown editor (prevents SSR issues)
+// Dynamically import Markdown editor (prevents SSR issues)
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 interface Category {
@@ -35,6 +35,9 @@ export default function PostForm({
   const [content, setContent] = useState(initialData ? initialData.content : "");
   const [published, setPublished] = useState(initialData ? initialData.published : false);
   const [categoryIds, setCategoryIds] = useState<number[]>(initialCategoryIds);
+
+  const isValidTitle = title.trim().length >= 3;
+  const isValidContent = content.trim().length >= 10;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +78,9 @@ export default function PostForm({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               required
             />
+            {!isValidTitle && (
+              <p className="text-xs text-red-600 mt-1">Title must be at least 3 characters.</p>
+            )}
           </div>
 
           {/* 👇 Markdown Editor */}
@@ -88,6 +94,9 @@ export default function PostForm({
                 preview="edit"
               />
             </div>
+            {!isValidContent && (
+              <p className="text-xs text-red-600 mt-1">Content must be at least 10 characters.</p>
+            )}
           </div>
 
           {/* Published Toggle */}
@@ -127,7 +136,7 @@ export default function PostForm({
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              disabled={!title.trim() || !content.trim() || isLoading}
+              disabled={!isValidTitle || !isValidContent || isLoading}
               className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
             >
               {isLoading ? "Saving..." : initialData ? "Update Post" : "Create Post"}

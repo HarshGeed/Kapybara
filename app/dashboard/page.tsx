@@ -45,6 +45,9 @@ export default function DashboardPage() {
       setShowPostForm(false);
       setEditingPost(null);
     },
+    onError: (err) => {
+      alert(err.message || "Failed to create post");
+    },
   });
 
   const updatePost = trpc.post.update.useMutation({
@@ -52,6 +55,9 @@ export default function DashboardPage() {
       utils.post.getAll.invalidate();
       setShowPostForm(false);
       setEditingPost(null);
+    },
+    onError: (err) => {
+      alert(err.message || "Failed to update post");
     },
   });
 

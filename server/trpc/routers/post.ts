@@ -17,12 +17,19 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const slug = slugify(input.title, { lower: true });
+      let slug = slugify(input.title, { lower: true });
+
+      // Ensure slug uniqueness in case of duplicate titles
+      const existing = await db.select().from(posts).where(eq(posts.slug, slug));
+      if (existing.length > 0) {
+        slug = `${slug}-${Date.now()}`;
+      }
+
       const newPost = await db.insert(posts).values({
         title: input.title,
         content: input.content,
         slug,
-        published: input.published,
+        published: input.published ?? false,
       }).returning();
 
       // Add categories if provided
