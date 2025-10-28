@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
@@ -6,6 +7,10 @@ import { eq } from "drizzle-orm";
 import slugify from "slugify";
 
 export const categoryRouter = router({
+  /**
+   * Create a new category
+   * Generates a URL-friendly slug from the category name
+   */
   create: publicProcedure
     .input(z.object({ name: z.string().min(2), description: z.string().optional() }))
     .mutation(async ({ input }) => {
@@ -18,10 +23,19 @@ export const categoryRouter = router({
       return newCategory[0];
     }),
 
+  /**
+   * Get all categories
+   * Returns a list of all available categories
+   */
   getAll: publicProcedure.query(async () => {
     return await db.select().from(categories);
   }),
 
+  /**
+   * Update an existing category
+   * Updates name, description, or both
+   * Automatically regenerates slug if name is updated
+   */
   update: publicProcedure
     .input(
       z.object({
@@ -47,6 +61,10 @@ export const categoryRouter = router({
       return updatedCategory[0];
     }),
 
+  /**
+   * Delete a category
+   * Removes the category and all associated post relationships (cascade delete)
+   */
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {

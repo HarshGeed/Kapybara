@@ -6,6 +6,22 @@ import Link from "next/link";
 import PostForm from "@/components/PostForm";
 import CategoryForm from "@/components/CategoryForm";
 
+function CategoryTags({ postId }: { postId: number }) {
+  const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
+  
+  if (!postCategories || postCategories.length === 0) return null;
+  
+  return (
+    <div className="flex gap-2 flex-wrap mt-2">
+      {postCategories.map((cat) => (
+        <span key={cat.id} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+          {cat.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -185,6 +201,7 @@ export default function DashboardPage() {
                           <span>•</span>
                           <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                         </div>
+                        <CategoryTags postId={post.id} />
                       </div>
                       <div className="flex gap-2 ml-4">
                         <button

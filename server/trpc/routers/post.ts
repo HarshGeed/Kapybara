@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "@/server/db";
 import { posts, postCategories, categories } from "@/server/db/schema";
-import { eq, inArray, and } from "drizzle-orm";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import slugify from "slugify";
 
 export const postRouter = router({
@@ -40,7 +40,7 @@ export const postRouter = router({
 
   // Get all posts (for dashboard - shows all posts)
   getAll: publicProcedure.query(async () => {
-    return await db.select().from(posts).orderBy(posts.createdAt);
+    return await db.select().from(posts).orderBy(desc(posts.createdAt));
   }),
 
   // Get all published posts
@@ -49,7 +49,7 @@ export const postRouter = router({
       .select()
       .from(posts)
       .where(eq(posts.published, true))
-      .orderBy(posts.createdAt);
+      .orderBy(desc(posts.createdAt));
   }),
 
   // Get paginated posts (for public pages - shows only published)
@@ -89,14 +89,14 @@ export const postRouter = router({
           .select()
           .from(posts)
           .where(and(inArray(posts.id, postIds), eq(posts.published, true)))
-          .orderBy(posts.createdAt);
+          .orderBy(desc(posts.createdAt));
       } else {
         // Get only published posts
         allPosts = await db
           .select()
           .from(posts)
           .where(eq(posts.published, true))
-          .orderBy(posts.createdAt);
+          .orderBy(desc(posts.createdAt));
       }
       
       return {

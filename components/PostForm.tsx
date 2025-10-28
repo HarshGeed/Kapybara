@@ -38,7 +38,6 @@ export default function PostForm({ isOpen, onClose, onSubmit, initialData, categ
       setPublished(false);
       setCategoryIds([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {

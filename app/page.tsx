@@ -3,6 +3,23 @@
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import Link from "next/link";
+import PostForm from "@/components/PostForm";
+
+function CategoryTags({ postId }: { postId: number }) {
+  const { data: postCategories } = trpc.post.getCategoriesByPostId.useQuery({ postId });
+  
+  if (!postCategories || postCategories.length === 0) return null;
+  
+  return (
+    <div className="flex gap-2 flex-wrap mt-2">
+      {postCategories.map((cat) => (
+        <span key={cat.id} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+          {cat.name}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,20 +34,16 @@ export default function HomePage() {
 
   const { data: allPosts } = trpc.post.getAllPublished.useQuery();
   const recentPosts = allPosts?.slice(0, 3) || [];
+  const { data: categories } = trpc.category.getAll.useQuery();
 
-  const { mutate, isPending: isPosting } = trpc.post.create.useMutation({
+  const createPost = trpc.post.create.useMutation({
     onSuccess: () => {
       utils.post.getPaginated.invalidate();
       utils.post.getAll.invalidate();
       utils.post.getAllPublished.invalidate();
-      setTitle("");
-      setContent("");
       setShowForm(false);
     },
   });
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
 
   const handleNext = () => {
     if (paginatedData && currentPage < paginatedData.totalPages) {
@@ -48,6 +61,10 @@ export default function HomePage() {
     setCurrentPage(page);
   };
 
+  const handlePostSubmit = (data: { title: string; content: string; published: boolean; categoryIds: number[] }) => {
+    createPost.mutate(data);
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -58,53 +75,21 @@ export default function HomePage() {
             <p className="text-gray-600">Thoughts, stories and ideas.</p>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => setShowForm(true)}
             className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition"
           >
             + New blog post
           </button>
         </div>
 
-        {/* Create Post Form */}
-        {showForm && (
-          <div className="mb-12 p-6 border border-gray-200 rounded-lg bg-gray-50">
-            <h2 className="text-xl font-semibold mb-4">Create New Post</h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Enter title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <textarea
-                placeholder="Write your content..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={() => mutate({ title, content, published: true })}
-                  disabled={isPosting || !title.trim() || !content.trim()}
-                  className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  {isPosting ? "Publishing..." : "Publish Post"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setTitle("");
-                    setContent("");
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Post Form Modal */}
+        <PostForm
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={handlePostSubmit}
+          categories={categories || []}
+          isLoading={createPost.isPending}
+        />
 
         {/* Recent Blog Posts Section */}
         {recentPosts.length > 0 && (
@@ -124,13 +109,10 @@ export default function HomePage() {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                       {recentPosts[0].title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-3">
+                    <p className="text-gray-600 line-clamp-3 mb-3">
                       {recentPosts[0].content}
                     </p>
-                    {/* <div className="mt-4 flex gap-2">
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Design</span>
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Research</span>
-                    </div> */}
+                    <CategoryTags postId={recentPosts[0].id} />
                   </div>
                 </div>
               </Link>
@@ -150,13 +132,10 @@ export default function HomePage() {
                         <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                           {post.title}
                         </h3>
-                        <p className="text-gray-600 line-clamp-2 text-sm">
+                        <p className="text-gray-600 line-clamp-2 text-sm mb-2">
                           {post.content}
                         </p>
-                        {/* <div className="mt-3 flex gap-2">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Design</span>
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Research</span>
-                        </div> */}
+                        <CategoryTags postId={post.id} />
                       </div>
                     </div>
                   </Link>
@@ -189,10 +168,7 @@ export default function HomePage() {
                       <p className="text-gray-600 line-clamp-2 text-sm mb-3">
                         {post.content}
                       </p>
-                      {/* <div className="flex gap-2 flex-wrap">
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Product</span>
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Research</span>
-                      </div> */}
+                      <CategoryTags postId={post.id} />
                     </div>
                   </div>
                 </Link>
