@@ -122,7 +122,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-8">
           <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
-            ← Back to Blog
+            ← Back to Home
           </Link>
           <h1 className="text-4xl font-semibold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">Manage your posts and categories</p>
